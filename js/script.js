@@ -1,0 +1,164 @@
+const chatbox = document.querySelector(".chatbox");
+const chatInput = document.querySelector(".chat-input textarea");
+const sendChatBtn = document.getElementById("send-btn");
+const chatToggler = document.querySelector(".chat-toggler");
+const closeBtn = document.querySelector(".close-btn");
+const fileInput = document.getElementById("file-input");
+const uploadBtn = document.getElementById("upload-btn");
+
+let pickedImage = null;
+let pickedFileText = null;
+
+// 1. دالة إرسال الطلب لـ Gemini ومعالجة الرد وتنسيقه
+function generateResponse(incomingLi, userMessage, mediaFile = null) {
+  const API_KEY = "AIzaSyD6aQjntuklv9q_T1dmc2-6h7slCOpZvWM"; 
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`; 
+
+  const parts = [{ text: userMessage }];
+
+  if (mediaFile) {
+    parts.push({
+      inlineData: {
+        mimeType: mediaFile.mimeType,
+        data: mediaFile.base64Data
+      }
+    });
+  }
+
+  const requestOptions = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ contents: [{ parts: parts }] })
+  };
+
+  fetch(API_URL, requestOptions)
+    .then(res => res.json())
+    .then(data => {
+      if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
+        let replyText = data.candidates[0].content.parts[0].text;
+        
+        // تحويل النجوم لـ Bold وضبط السطور الجديدة
+        replyText = replyText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+        
+        incomingLi.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p>${replyText}</p>`;
+      } else if (data.error) {
+        incomingLi.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p>جوجل بيقول: ${data.error.message}</p>`;
+      } else {
+        incomingLi.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p>فهمتك، بس ياريت توضحي سؤالك أكتر.</p>`;
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      incomingLi.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p>عذراً، حصلت مشكلة في الاتصال بالـ API.</p>`;
+    })
+    .finally(() => chatbox.scrollTo(0, chatbox.scrollHeight));
+}
+
+// 2. دالة التحكم في الشات وإنشاء فقاعات الإرسال
+const handleChat = () => {
+  if (!chatInput) return;
+  
+  // حفظ النص المكتوب في متغير ثابت الأول قبل التصفير
+  const typedMessage = chatInput.value.trim(); 
+  let userMessage = typedMessage; 
+  
+  if (!userMessage && !pickedImage && !pickedFileText) return;
+  
+  if (pickedFileText) {
+    userMessage = userMessage ? `${userMessage}\n\n[محتوى الملف المرفق]:\n${pickedFileText}` : `حلل محتوى هذا الملف:\n${pickedFileText}`;
+  }
+
+  const chatLi = document.createElement("li");
+  chatLi.classList.add("chat", "outgoing");
+  
+  // الاعتماد على المتغير الثابت الثابت typedMessage لضمان ظهور النص مع الصورة
+  if (pickedImage) {
+    chatLi.innerHTML = `
+      <div class="message-content" style="display: flex; flex-direction: column; gap: 8px;">
+        <img src="data:${pickedImage.mimeType};base64,${pickedImage.base64Data}" 
+             alt="Uploaded Image" 
+             style="max-width: 180px; max-height: 180px; border-radius: 12px; object-fit: cover; align-self: flex-end; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">
+        ${typedMessage ? `<p style="margin: 0; word-break: break-word;">${typedMessage}</p>` : ''}
+      </div>
+    `;
+  } else if (pickedFileText) {
+    chatLi.innerHTML = `<p>${typedMessage} <br><small>📄 تم إرفاق ملف نصي</small></p>`;
+  } else {
+    chatLi.innerHTML = `<p>${userMessage}</p>`;
+  }
+  
+  chatbox.appendChild(chatLi);
+  chatInput.value = ""; // التصفير هنا بقا آمن تماماً
+  chatbox.scrollTo(0, chatbox.scrollHeight);
+
+  // تأثير الكتابة للبوت
+  const incomingLi = document.createElement("li");
+  incomingLi.classList.add("chat", "incoming");
+  incomingLi.innerHTML = `<span class="material-symbols-outlined">smart_toy</span>
+                          <div class="typing-animation"><span></span><span></span><span></span></div>`;
+  chatbox.appendChild(incomingLi);
+  chatbox.scrollTo(0, chatbox.scrollHeight);
+
+  generateResponse(incomingLi, userMessage || "حلل المرفقات المرسلة", pickedImage);
+
+  // إعادة تصفير المتغيرات بعد الإرسال
+  pickedImage = null;
+  pickedFileText = null;
+  if (uploadBtn) uploadBtn.style.color = "#706fd3"; 
+  if (fileInput) fileInput.value = "";
+};
+
+// 3. مراقب اختيار الملفات
+if (fileInput) {
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files[0]; 
+    if (!file) return; 
+
+    const reader = new FileReader(); 
+    
+    if (file.type.startsWith("image/")) {
+      reader.onload = (e) => {
+        const base64Data = e.target.result.split(",")[1];
+        pickedImage = {
+          mimeType: file.type,
+          base64Data: base64Data
+        };
+        pickedFileText = null; 
+        if (uploadBtn) uploadBtn.style.color = "#2ecc71"; 
+        console.log("جاهز لتحليل الصورة!");
+      };
+      reader.readAsDataURL(file); 
+
+    } else {
+      reader.onload = (e) => {
+        pickedFileText = e.target.result; 
+        pickedImage = null; 
+        if (uploadBtn) uploadBtn.style.color = "#3498db"; 
+        console.log("تم قراءة محتوى الملف بنجاح وجاهز للإرسال!");
+      };
+      reader.readAsText(file); 
+    }
+  });
+}
+
+// 4. مراقبو الأحداث (Event Listeners) للـ UI
+if (sendChatBtn) {
+  sendChatBtn.addEventListener("click", handleChat);
+}
+
+if (chatToggler) {
+  chatToggler.addEventListener("click", () => document.body.classList.toggle("show-chatbot"));
+}
+
+if (closeBtn) {
+  closeBtn.addEventListener("click", () => document.body.classList.remove("show-chatbot"));
+}
+
+if (chatInput) {
+  chatInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleChat();
+    }
+  });
+}

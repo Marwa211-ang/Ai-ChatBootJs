@@ -1,0 +1,265 @@
+/* تنسيق جسم الصفحة الافتراضي */
+body {
+  background: #e3f2fd;
+  font-family: sans-serif;
+}
+.hero-container {
+  direction: ltr;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 50px 10%;
+  background: linear-gradient(45deg, #6366f1, #a855f7 100%);
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.hero-text {
+    flex: 1;
+    max-width: 500px;
+    color: #ffffff;
+}
+
+.hero-text h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.hero-text p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #f3e8ff; /* بنفسجي فاتح جداً هادي للكتابة الفرعية */
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: linear-gradient(45deg, #6366f1, #a855f7);
+  color: #fff;
+}
+
+header h2 {
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+header .close-btn {
+  cursor: pointer;
+  font-size: 2rem;
+  transition: transform 0.2s ease;
+}
+
+header .close-btn:hover {
+  transform: translateY(3px);
+}
+
+/* زرار التوجلر المدور اللي تحت على اليمين */
+.chat-toggler {
+  position: fixed;
+  right: 35px;
+  bottom: 35px;
+  height: 50px;
+  width: 50px;
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  cursor: pointer;
+  background: #724ae8;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* لما الشات يفتح، بنلف الأيقونة حركة خفيفة */
+body.show-chatbot .chat-toggler {
+  transform: rotate(90px);
+}
+
+/* صندوق الشات نفسه */
+.chatbot {
+  position: fixed;
+  right: 35px;
+  bottom: 100px;
+  width: 420px;
+  height: 550px;
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 0 128px 0 rgba(0,0,0,0.1), 0 32px 64px -48px rgba(0,0,0,0.5);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* سحر الإخفاء والظهور بالأنيميشن */
+  transform: scale(0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+/* أول ما الـ JS يضيف الكلاس للـ body الشات يظهر فورا */
+body.show-chatbot .chatbot {
+  transform: scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.chatbox {
+  flex: 1; /* تصحيح الكلمة من flex-block لـ flex عشان تفرد */
+  overflow-y: auto;
+  list-style: none;
+  padding: 15px 20px;
+  margin: 0;
+  direction: ltr;
+}
+
+.chatbox .chat {
+  display: flex;
+  flex-direction: row; 
+  align-items: flex-end; 
+  gap: 10px;
+  margin: 15px 0;
+  direction: ltr;
+}
+
+/* تصحيح هنا: شيلنا النقطة من قبل span */
+.chatbox .chat span {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(45deg, #6366f1, #a855f7);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0; 
+}
+
+.chatbox p {
+  background: #f1f1f1;
+  padding: 12px 16px;
+  border-radius: 10px 10px 10px 0;
+  max-width: 75%;
+  color: #333;
+  margin: 0;
+}
+
+/* رسائل مروة (اليمين والبنفسجي) */
+.chatbox .outgoing {
+  justify-content: flex-end;
+  padding-left: 50px;
+}
+
+.chatbox .outgoing p {
+  background: #724ae8;
+  color: #fff;
+  border-radius: 10px 10px 0 10px;
+  max-width: 100%;
+}
+
+.chatbox .incoming span {
+  align-self: flex-start;
+  margin-top: 5px;
+}
+
+/* منطقة الـ Input السفلي */
+.chat-input {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 60px;
+  display: flex !important;
+  flex-direction: row;
+  background: #fff;
+  padding: 5px 15px;
+  border-top: 1px solid #eee;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.chat-input textarea {
+  flex: 1;
+  height: 40px;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 0.95rem;
+  padding: 10px 5px;
+  direction: rtl;
+  box-sizing: border-box;
+  overflow-y: hidden;
+}
+
+.chat-input span {
+  color: #724ae8 !important;
+  cursor: pointer;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  margin-left: 10px;
+}
+
+/* صندوق الأنيميشن (النقط اللي بتتحرك) */
+.typing-animation {
+  display: flex;
+  gap: 5px;
+  background: #f2f2f2;
+  padding: 15px 20px;
+  border-radius: 10px 10px 10px 0;
+}
+
+.typing-animation span {
+  height: 8px;
+  width: 8px;
+  background: #724ae8;
+  border-radius: 50%;
+  opacity: 0.4;
+  animation: blink 1.4s infinite ease-in-out both;
+}
+
+.typing-animation span:nth-child(1) { animation-delay: 0s; }
+.typing-animation span:nth-child(2) { animation-delay: 0.2s; }
+.typing-animation span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes blink {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+
+.chat-input #camera-btn {
+  font-size: 1.45rem;
+  color: #706fd3;
+  cursor: pointer;
+  margin-right: 8px; /* مسافة صغنونة بينها وبين المشبك */
+  transition: color 0.2s ease;
+}
+
+.chat-input #camera-btn:hover {
+  color: #474787;
+}
+
+/* هنعدل البادنج بتاع التكست اريا شوية عشان يساع الأيقونتين */
+.chat-input textarea {
+  padding: 10px 10px 10px 5px;
+}
+
+.chat.incoming p {
+    direction: rtl;         /* يجعل اتجاه القراءة من اليمين للشمال */
+    text-align: start;      /*يتكيف دينماكيا مع العربي او الانجليزي*/
+    
+  }
