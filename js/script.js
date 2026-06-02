@@ -5,18 +5,27 @@ const chatToggler = document.querySelector(".chat-toggler");
 const closeBtn = document.querySelector(".close-btn");
 const fileInput = document.getElementById("file-input");
 const uploadBtn = document.getElementById("upload-btn");
-
+const fullscreenBtn = document.getElementById("fullscreen-btn");
+const chatbotContainer = document.querySelector(".chatbot");
+const clearBtn = document.getElementById("clear-btn");
 let pickedImage = null;
 let pickedFileText = null;
 
-//  - مصفوفة لتخزين تاريخ المحادثة بتقرأ من الخزنة فوراً لو فيها رسايل قديمة
+// - مصفوفة لتخزين تاريخ المحادثة بتقرأ من الخزنة فوراً لو فيها رسايل قديمة
 let chatHistory = JSON.parse(localStorage.getItem("chat-history")) || [];
 
 // 1. دالة إرسال الطلب لـ Gemini ومعالجة الرد وتنسيقه
 function generateResponse(incomingLi, userMessage, mediaFile = null) {
   
-  const API_KEY = "AQ.Ab8RN6KMa3N3rkh7FJmFd8eUMDXPTfgiirZ6l1A6WJGbcK-AWw"; 
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`; 
+ let API_KEY = "";
+  if (typeof CONFIG_API_KEY !== "undefined") {
+    API_KEY = CONFIG_API_KEY;
+  } else {
+    API_KEY = localStorage.getItem("gemini-api-key");
+  }
+
+  
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
 
   const parts = [{ text: userMessage }];
 
@@ -46,7 +55,7 @@ function generateResponse(incomingLi, userMessage, mediaFile = null) {
         
         incomingLi.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p>${replyText}</p>`;
 
-        //حفظ رد البوت جوه ـ Local Storage
+        // حفظ رد البوت جوه الـ Local Storage
         chatHistory.push({ role: "model", text: replyText });
         localStorage.setItem("chat-history", JSON.stringify(chatHistory));
 
@@ -96,8 +105,7 @@ const handleChat = () => {
   
   chatbox.appendChild(chatLi);
 
-  // 💾 [تعديل جديد] - حفظ رسالة المستخدم جوه الـ Local Storage (سواء كانت نصية أو مع ملف)
-  // بنحفظ الـ innerHTML عشان لو فيها صورة تظهر برضه لما نفتح الصفحة تاني
+  // حفظ رسالة المستخدم جوه الـ Local Storage
   chatHistory.push({ role: "user", text: chatLi.innerHTML, isHTML: !!pickedImage });
   localStorage.setItem("chat-history", JSON.stringify(chatHistory));
 
@@ -120,14 +128,13 @@ const handleChat = () => {
   if (fileInput) fileInput.value = "";
 };
 
-//  - دالة وظيفتها تقرأ الـ Local Storage وتطبع الرسايل القديمة أول ما نفتح الشات
+// - دالة وظيفتها تقرأ الـ Local Storage وتطبع الرسايل القديمة أول ما نفتح الشات
 const loadChatHistory = () => {
   chatHistory.forEach(chat => {
     const chatLi = document.createElement("li");
     chatLi.classList.add("chat", chat.role === "user" ? "outgoing" : "incoming");
     
     if (chat.role === "user") {
-      // لو الرسالة القديمة كان فيها صورة أو كود بتنزل بالـ innerHTML بتاعها المظبوط
       chatLi.innerHTML = chat.isHTML ? chat.text : `<p>${chat.text}</p>`;
     } else {
       chatLi.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p>${chat.text}</p>`;
@@ -137,7 +144,7 @@ const loadChatHistory = () => {
   chatbox.scrollTo(0, chatbox.scrollHeight);
 };
 
-//  - تشغيل دالة استرجاع التاريخ فوراً أول ما الملف يفتح
+// - تشغيل دالة استرجاع التاريخ فوراً أول ما الملف يفتح
 loadChatHistory();
 
 // 3. مراقب اختيار الملفات
@@ -191,6 +198,42 @@ if (chatInput) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleChat();
+    }
+  });
+}
+
+
+
+    
+    
+
+
+
+    
+    // تغيير شكل الأيقونة ديناميكياً (لو كبير يخليها أيقونة تصغير والعكس)
+   if (fullscreenBtn && chatbotContainer) {
+    fullscreenBtn.addEventListener("click", () => {
+      chatbotContainer.classList.toggle("fullscreen");
+      fullscreenBtn.textContent = chatbotContainer.classList.contains("fullscreen") ? "fullscreen_exit" : "fullscreen";
+      setTimeout(() => { if (chatbox) chatbox.scrollTop = chatbox.scrollHeight; }, 100);
+    });
+  }
+
+
+//  ميزة مسح المحادثة بالكامل (Clear Chat)
+if (clearBtn) {
+  clearBtn.addEventListener("click", () => {
+    if (confirm("هل أنت متأكد من رغبتك في مسح المحادثة بالكامل؟")) {
+      localStorage.removeItem("chat-history");
+      chatHistory = [];
+      chatbox.innerHTML = "";
+      
+      const welcomeLi = document.createElement("li");
+      welcomeLi.classList.add("chat", "incoming");
+      welcomeLi.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p>Hello! How can I help you today? ✨</p>`;
+      chatbox.appendChild(welcomeLi);
+      
+      console.log("تم تنظيف الشات بنجاح!");
     }
   });
 }

@@ -77,7 +77,7 @@ header .close-btn:hover {
 
 /* لما الشات يفتح، بنلف الأيقونة حركة خفيفة */
 body.show-chatbot .chat-toggler {
-  transform: rotate(90px);
+  transform: rotate(90deg);
 }
 
 /* صندوق الشات نفسه */
@@ -114,6 +114,8 @@ body.show-chatbot .chatbot {
   padding: 15px 20px;
   margin: 0;
   direction: ltr;
+  scroll-behavior: smooth;
+  padding-bottom: 90px !important;
 }
 
 .chatbox .chat {
@@ -123,6 +125,8 @@ body.show-chatbot .chatbot {
   gap: 10px;
   margin: 15px 0;
   direction: ltr;
+  list-style: none;
+  margin-bottom: 20px;
 }
 
 /* تصحيح هنا: شيلنا النقطة من قبل span */
@@ -258,8 +262,41 @@ body.show-chatbot .chatbot {
   padding: 10px 10px 10px 5px;
 }
 
-.chat.incoming p {
-    direction: rtl;         /* يجعل اتجاه القراءة من اليمين للشمال */
-    text-align: start;      /*يتكيف دينماكيا مع العربي او الانجليزي*/
+.chatbox .incoming p {
+    direction: auto;   
+    text-align: initial;     
     
   }
+/* ⚡ كلاس تحويل الشات لملء الشاشة بالكامل */
+.chatbot.fullscreen {
+    width: 100vw !important;  /* يأخذ عرض الشاشة بالكامل */
+    height: 100vh !important; /* يأخذ طول الشاشة بالكامل */
+    right: 0 !important;      /* يتلغي الهامش اليمين */
+    bottom: 0 !important;     /* يتلغي الهامش التحتاني */
+    border-radius: 0 !important; /* نشيل الحواف الدائرية عشان يقفل مع الشاشة */
+}
+
+/* لتكبير منطقة الكتابة شوية لما نكون في وضع ملء الشاشة عشان التناسق */
+.chatbot.fullscreen .chat-input {
+    height: 70px;
+    padding: 10px 30px;
+}
+
+.chatbot.fullscreen {
+  width: 100vw !important;  /* يأخذ عرض الشاشة بالكامل */
+    height: 100vh !important; /* يأخذ طول الشاشة بالكامل */
+    right: 0 !important;      /* يتلغي الهامش اليمين */
+    bottom: 0 !important;     /* يتلغي الهامش التحتاني */
+    border-radius: 0 !important; /* نشيل الحواف الدائرية عشان يقفل مع الشاشة */
+}
+
+/* لتكبير منطقة الكتابة شوية لما نكون في وضع ملء الشاشة عشان التناسق */
+  .chatbot.fullscreen .chat-input {
+    height: 70px;
+    padding: 10px 30px;
+}
+#clear-btn:hover {
+    color: #f2f2f2 !important; /* بيتحول للون الأحمر الهادي عند الوقوف عليه */
+    transform: scale(1.1);     /* بيكبر حاجة بسيطة جداً */
+    transition: all 0.2s ease;
+}

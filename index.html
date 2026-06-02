@@ -20,9 +20,15 @@
   </button>
 
   <div class="chatbot">
-    <header>
-      <h2>chatBot</h2>
-      <span class="close-btn material-symbols-rounded">keyboard_arrow_down</span>    
+   <header>
+      <h2>ChatBot</h2>
+      
+      <div class="header-btns" style="display: flex; gap: 15px; align-items: center; flex-direction: row-reverse;">
+        <span class="close-btn material-symbols-outlined" style="cursor: pointer; font-size: 1.6rem;">close</span>
+        
+        <span id="fullscreen-btn" class="material-symbols-outlined" style="cursor: pointer; font-size: 1.6rem;">fullscreen</span>        
+        <span id="clear-btn" class="material-symbols-outlined" style="cursor: pointer; font-size: 1.6rem;" title="مسح المحادثة">delete</span>
+      </div>  
     </header>
     
     <ul class="chatbox">
@@ -41,5 +47,7 @@
   </div>
 
   <script src="js/script.js" defer></script>
+  <script src="js/config.js" defer></script>
+
 </body>
 </html>
