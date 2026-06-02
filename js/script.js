@@ -9,9 +9,13 @@ const uploadBtn = document.getElementById("upload-btn");
 let pickedImage = null;
 let pickedFileText = null;
 
+//  - مصفوفة لتخزين تاريخ المحادثة بتقرأ من الخزنة فوراً لو فيها رسايل قديمة
+let chatHistory = JSON.parse(localStorage.getItem("chat-history")) || [];
+
 // 1. دالة إرسال الطلب لـ Gemini ومعالجة الرد وتنسيقه
 function generateResponse(incomingLi, userMessage, mediaFile = null) {
-  const API_KEY = "AIzaSyD6aQjntuklv9q_T1dmc2-6h7slCOpZvWM"; 
+  
+  const API_KEY = "AQ.Ab8RN6KMa3N3rkh7FJmFd8eUMDXPTfgiirZ6l1A6WJGbcK-AWw"; 
   const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`; 
 
   const parts = [{ text: userMessage }];
@@ -41,6 +45,11 @@ function generateResponse(incomingLi, userMessage, mediaFile = null) {
         replyText = replyText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
         
         incomingLi.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p>${replyText}</p>`;
+
+        //حفظ رد البوت جوه ـ Local Storage
+        chatHistory.push({ role: "model", text: replyText });
+        localStorage.setItem("chat-history", JSON.stringify(chatHistory));
+
       } else if (data.error) {
         incomingLi.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p>جوجل بيقول: ${data.error.message}</p>`;
       } else {
@@ -58,7 +67,6 @@ function generateResponse(incomingLi, userMessage, mediaFile = null) {
 const handleChat = () => {
   if (!chatInput) return;
   
-  // حفظ النص المكتوب في متغير ثابت الأول قبل التصفير
   const typedMessage = chatInput.value.trim(); 
   let userMessage = typedMessage; 
   
@@ -71,7 +79,6 @@ const handleChat = () => {
   const chatLi = document.createElement("li");
   chatLi.classList.add("chat", "outgoing");
   
-  // الاعتماد على المتغير الثابت الثابت typedMessage لضمان ظهور النص مع الصورة
   if (pickedImage) {
     chatLi.innerHTML = `
       <div class="message-content" style="display: flex; flex-direction: column; gap: 8px;">
@@ -88,7 +95,13 @@ const handleChat = () => {
   }
   
   chatbox.appendChild(chatLi);
-  chatInput.value = ""; // التصفير هنا بقا آمن تماماً
+
+  // 💾 [تعديل جديد] - حفظ رسالة المستخدم جوه الـ Local Storage (سواء كانت نصية أو مع ملف)
+  // بنحفظ الـ innerHTML عشان لو فيها صورة تظهر برضه لما نفتح الصفحة تاني
+  chatHistory.push({ role: "user", text: chatLi.innerHTML, isHTML: !!pickedImage });
+  localStorage.setItem("chat-history", JSON.stringify(chatHistory));
+
+  chatInput.value = ""; 
   chatbox.scrollTo(0, chatbox.scrollHeight);
 
   // تأثير الكتابة للبوت
@@ -101,12 +114,31 @@ const handleChat = () => {
 
   generateResponse(incomingLi, userMessage || "حلل المرفقات المرسلة", pickedImage);
 
-  // إعادة تصفير المتغيرات بعد الإرسال
   pickedImage = null;
   pickedFileText = null;
   if (uploadBtn) uploadBtn.style.color = "#706fd3"; 
   if (fileInput) fileInput.value = "";
 };
+
+//  - دالة وظيفتها تقرأ الـ Local Storage وتطبع الرسايل القديمة أول ما نفتح الشات
+const loadChatHistory = () => {
+  chatHistory.forEach(chat => {
+    const chatLi = document.createElement("li");
+    chatLi.classList.add("chat", chat.role === "user" ? "outgoing" : "incoming");
+    
+    if (chat.role === "user") {
+      // لو الرسالة القديمة كان فيها صورة أو كود بتنزل بالـ innerHTML بتاعها المظبوط
+      chatLi.innerHTML = chat.isHTML ? chat.text : `<p>${chat.text}</p>`;
+    } else {
+      chatLi.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p>${chat.text}</p>`;
+    }
+    chatbox.appendChild(chatLi);
+  });
+  chatbox.scrollTo(0, chatbox.scrollHeight);
+};
+
+//  - تشغيل دالة استرجاع التاريخ فوراً أول ما الملف يفتح
+loadChatHistory();
 
 // 3. مراقب اختيار الملفات
 if (fileInput) {
