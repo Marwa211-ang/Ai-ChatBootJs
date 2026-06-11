@@ -1,4 +1,6 @@
-const chatbox = document.querySelector(".chatbox");
+
+   
+ const chatbox = document.querySelector(".chatbox");
 const chatInput = document.querySelector(".chat-input textarea");
 const sendChatBtn = document.getElementById("send-btn");
 const chatToggler = document.querySelector(".chat-toggler");
@@ -8,27 +10,26 @@ const uploadBtn = document.getElementById("upload-btn");
 const fullscreenBtn = document.getElementById("fullscreen-btn");
 const chatbotContainer = document.querySelector(".chatbot");
 const clearBtn = document.getElementById("clear-btn");
-let pickedImage = null;
-let pickedFileText = null;
+let pickedMedia = null; // هنوحد المتغير للصور والملفات النصية كـ Base64
 
-// - مصفوفة لتخزين تاريخ المحادثة بتقرأ من الخزنة فوراً لو فيها رسايل قديمة
+// مصفوفة لتخزين تاريخ المحادثة
 let chatHistory = JSON.parse(localStorage.getItem("chat-history")) || [];
 
 // 1. دالة إرسال الطلب لـ Gemini ومعالجة الرد وتنسيقه
 function generateResponse(incomingLi, userMessage, mediaFile = null) {
   
- let API_KEY = "";
+  let API_KEY = "";
   if (typeof CONFIG_API_KEY !== "undefined") {
     API_KEY = CONFIG_API_KEY;
   } else {
     API_KEY = localStorage.getItem("gemini-api-key");
   }
 
-  
   const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
 
   const parts = [{ text: userMessage }];
 
+  // لو فيه ملف (صورة أو ملف نصي) مبعوث كـ Base64 بنضيفه هنا
   if (mediaFile) {
     parts.push({
       inlineData: {
@@ -47,7 +48,7 @@ function generateResponse(incomingLi, userMessage, mediaFile = null) {
   fetch(API_URL, requestOptions)
     .then(res => res.json())
     .then(data => {
-      if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
+      if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
         let replyText = data.candidates[0].content.parts[0].text;
         
         // تحويل النجوم لـ Bold وضبط السطور الجديدة
@@ -79,26 +80,24 @@ const handleChat = () => {
   const typedMessage = chatInput.value.trim(); 
   let userMessage = typedMessage; 
   
-  if (!userMessage && !pickedImage && !pickedFileText) return;
+  if (!userMessage && !pickedMedia) return;
   
-  if (pickedFileText) {
-    userMessage = userMessage ? `${userMessage}\n\n[محتوى الملف المرفق]:\n${pickedFileText}` : `حلل محتوى هذا الملف:\n${pickedFileText}`;
-  }
-
   const chatLi = document.createElement("li");
   chatLi.classList.add("chat", "outgoing");
   
-  if (pickedImage) {
+  // معالجة عرض الفقاعة بناءً على نوع المرفق
+  if (pickedMedia && pickedMedia.mimeType.startsWith("image/")) {
     chatLi.innerHTML = `
       <div class="message-content" style="display: flex; flex-direction: column; gap: 8px;">
-        <img src="data:${pickedImage.mimeType};base64,${pickedImage.base64Data}" 
+        <img src="data:${pickedMedia.mimeType};base64,${pickedMedia.base64Data}" 
              alt="Uploaded Image" 
              style="max-width: 180px; max-height: 180px; border-radius: 12px; object-fit: cover; align-self: flex-end; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">
         ${typedMessage ? `<p style="margin: 0; word-break: break-word;">${typedMessage}</p>` : ''}
       </div>
     `;
-  } else if (pickedFileText) {
-    chatLi.innerHTML = `<p>${typedMessage} <br><small>📄 تم إرفاق ملف نصي</small></p>`;
+  } else if (pickedMedia && pickedMedia.mimeType === "text/plain") {
+    chatLi.innerHTML = `<p>${typedMessage || "تحليل الملف النصي"} <br><small>📄 تم إرفاق ملف نصي</small></p>`;
+    userMessage = typedMessage ? `${typedMessage}\n(برجاء تحليل الملف النصي المرفق)` : "قم بتحليل وتلخيص الملف النصي المرفق.";
   } else {
     chatLi.innerHTML = `<p>${userMessage}</p>`;
   }
@@ -106,7 +105,7 @@ const handleChat = () => {
   chatbox.appendChild(chatLi);
 
   // حفظ رسالة المستخدم جوه الـ Local Storage
-  chatHistory.push({ role: "user", text: chatLi.innerHTML, isHTML: !!pickedImage });
+  chatHistory.push({ role: "user", text: chatLi.innerHTML, isHTML: true });
   localStorage.setItem("chat-history", JSON.stringify(chatHistory));
 
   chatInput.value = ""; 
@@ -120,16 +119,22 @@ const handleChat = () => {
   chatbox.appendChild(incomingLi);
   chatbox.scrollTo(0, chatbox.scrollHeight);
 
-  generateResponse(incomingLi, userMessage || "حلل المرفقات المرسلة", pickedImage);
+  // إرسال الطلب مع الـ pickedMedia الموحد
+  generateResponse(incomingLi, userMessage, pickedMedia);
 
-  pickedImage = null;
-  pickedFileText = null;
+  pickedMedia = null;
   if (uploadBtn) uploadBtn.style.color = "#706fd3"; 
   if (fileInput) fileInput.value = "";
 };
 
-// - دالة وظيفتها تقرأ الـ Local Storage وتطبع الرسايل القديمة أول ما نفتح الشات
+// دالة استرجاع تاريخ الشات من الـ Local Storage
 const loadChatHistory = () => {
+  chatbox.innerHTML = ""; // تصفية أي عناصر افتراضية قبل التحميل
+  if (chatHistory.length === 0) {
+    // لو الـ Local Storage فاضي اعرض رسالة الترحيب الافتراضية
+    chatbox.innerHTML = `<li class="chat incoming"><span class="material-symbols-outlined">smart_toy</span><p>Hello! How can I help you today? ✨</p></li>`;
+    return;
+  }
   chatHistory.forEach(chat => {
     const chatLi = document.createElement("li");
     chatLi.classList.add("chat", chat.role === "user" ? "outgoing" : "incoming");
@@ -144,7 +149,7 @@ const loadChatHistory = () => {
   chatbox.scrollTo(0, chatbox.scrollHeight);
 };
 
-// - تشغيل دالة استرجاع التاريخ فوراً أول ما الملف يفتح
+// تشغيل دالة استرجاع التاريخ فوراً عند فتح الملف
 loadChatHistory();
 
 // 3. مراقب اختيار الملفات
@@ -158,11 +163,10 @@ if (fileInput) {
     if (file.type.startsWith("image/")) {
       reader.onload = (e) => {
         const base64Data = e.target.result.split(",")[1];
-        pickedImage = {
+        pickedMedia = {
           mimeType: file.type,
           base64Data: base64Data
         };
-        pickedFileText = null; 
         if (uploadBtn) uploadBtn.style.color = "#2ecc71"; 
         console.log("جاهز لتحليل الصورة!");
       };
@@ -170,12 +174,15 @@ if (fileInput) {
 
     } else {
       reader.onload = (e) => {
-        pickedFileText = e.target.result; 
-        pickedImage = null; 
+        const base64Data = e.target.result.split(",")[1];
+        pickedMedia = {
+          mimeType: "text/plain",
+          base64Data: base64Data
+        };
         if (uploadBtn) uploadBtn.style.color = "#3498db"; 
-        console.log("تم قراءة محتوى الملف بنجاح وجاهز للإرسال!");
+        console.log("الملف النصي جاهز وتم تحويله لـ Base64 بسرعة!");
       };
-      reader.readAsText(file); 
+      reader.readAsDataURL(file); 
     }
   });
 }
@@ -202,37 +209,21 @@ if (chatInput) {
   });
 }
 
+if (fullscreenBtn && chatbotContainer) {
+  fullscreenBtn.addEventListener("click", () => {
+    chatbotContainer.classList.toggle("fullscreen");
+    fullscreenBtn.textContent = chatbotContainer.classList.contains("fullscreen") ? "fullscreen_exit" : "fullscreen";
+    setTimeout(() => { if (chatbox) chatbox.scrollTop = chatbox.scrollHeight; }, 100);
+  });
+}
 
-
-    
-    
-
-
-
-    
-    // تغيير شكل الأيقونة ديناميكياً (لو كبير يخليها أيقونة تصغير والعكس)
-   if (fullscreenBtn && chatbotContainer) {
-    fullscreenBtn.addEventListener("click", () => {
-      chatbotContainer.classList.toggle("fullscreen");
-      fullscreenBtn.textContent = chatbotContainer.classList.contains("fullscreen") ? "fullscreen_exit" : "fullscreen";
-      setTimeout(() => { if (chatbox) chatbox.scrollTop = chatbox.scrollHeight; }, 100);
-    });
-  }
-
-
-//  ميزة مسح المحادثة بالكامل (Clear Chat)
+// ميزة مسح المحادثة بالكامل (Clear Chat)
 if (clearBtn) {
   clearBtn.addEventListener("click", () => {
     if (confirm("هل أنت متأكد من رغبتك في مسح المحادثة بالكامل؟")) {
       localStorage.removeItem("chat-history");
       chatHistory = [];
-      chatbox.innerHTML = "";
-      
-      const welcomeLi = document.createElement("li");
-      welcomeLi.classList.add("chat", "incoming");
-      welcomeLi.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p>Hello! How can I help you today? ✨</p>`;
-      chatbox.appendChild(welcomeLi);
-      
+      loadChatHistory();
       console.log("تم تنظيف الشات بنجاح!");
     }
   });
