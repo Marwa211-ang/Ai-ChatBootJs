@@ -74,6 +74,7 @@ function generateResponse(incomingLi, userMessage, mediaFile = null) {
 }
 
 // 2. دالة التحكم في الشات وإنشاء فقاعات الإرسال
+// 2. دالة التحكم في الشات وإنشاء فقاعات الإرسال
 const handleChat = () => {
   if (!chatInput) return;
   
@@ -81,10 +82,13 @@ const handleChat = () => {
   let userMessage = typedMessage; 
   
   if (!userMessage && !pickedMedia) return;
-  if (pickedFileText) {
-    const safeText = pickedFileText.substring(0, 10000); 
+  
+  // التصحيح: فحص ما إذا كان المرفق ملفاً نصياً لدمجه بذكاء ثنائي اللغة
+  if (pickedMedia && pickedMedia.mimeType === "text/plain") {
+    // فك تشفير الـ Base64 لنص صريح بأمان وعمل حماية لحجم الأحرف
+    const decodedText = atob(pickedMedia.base64Data);
+    const safeText = decodedText.substring(0, 10000); 
     
-    // تعليمات ثنائية اللغة تجبر الموديل يفهم ويحلل باللغتين ويرد حسب لغة سؤالك
     const systemInstruction = `
 [System Instruction / نظام تحليل الملفات الذكي]:
 You are an expert document and code analyzer. You support both Arabic and English perfectly.
