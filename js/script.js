@@ -81,7 +81,29 @@ const handleChat = () => {
   let userMessage = typedMessage; 
   
   if (!userMessage && !pickedMedia) return;
-  
+  if (pickedFileText) {
+    const safeText = pickedFileText.substring(0, 10000); 
+    
+    // تعليمات ثنائية اللغة تجبر الموديل يفهم ويحلل باللغتين ويرد حسب لغة سؤالك
+    const systemInstruction = `
+[System Instruction / نظام تحليل الملفات الذكي]:
+You are an expert document and code analyzer. You support both Arabic and English perfectly.
+Analyse the attached file structure, key concepts, or main functions. 
+Respond in the same language the user uses for their question. If the user asks "what is the most important part", extract it and explain why.
+
+أنت خبير في تحليل المستندات والأكواد وتدعم العربية والإنجليزية تماماً.
+قم بتحليل بنية الملف المرفق، واستخرج الأفكار أو الدوال الأساسية.
+رد دائماً بنفس اللغة التي سأل بها المستخدم. إذا سألك عن أهم جزء، استخرجه واشرح السبب.
+
+[Attached File Content / محتوى الملف المرفق]:
+${safeText}
+--------------------------------------------------
+`;
+
+    userMessage = typedMessage 
+      ? `${systemInstruction}\n[User Question]: ${typedMessage}` 
+      : `${systemInstruction}\n[User Question]: قم بتحليل هذا الملف بالكامل واستخرج الخلاصة وأهم جزء فيه / Analyze this file and extract the summary and the most important part.`;
+  }
   const chatLi = document.createElement("li");
   chatLi.classList.add("chat", "outgoing");
   
