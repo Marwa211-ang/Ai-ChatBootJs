@@ -13,6 +13,7 @@ body {
   background: linear-gradient(45deg, #6366f1, #a855f7 100%);
   min-height: 100vh;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  box-sizing: border-box;
 }
 
 .hero-text {
@@ -67,10 +68,10 @@ header .close-btn:hover {
 
 .chat-toggler {
   position: fixed;
-  right: 35px;
-  bottom: 35px;
-  height: 50px;
-  width: 50px;
+  right: 20px;
+  bottom: 20px;
+  height: 55px;
+  width: 55px;
   color: #fff;
   border: none;
   display: flex;
@@ -81,8 +82,8 @@ header .close-btn:hover {
   background: #724ae8;
   border-radius: 50%;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  z-index: 999;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 1001;
 }
 
 body.show-chatbot .chat-toggler {
@@ -279,6 +280,22 @@ body.show-chatbot .chatbot {
 }
 
 @media (max-width: 490px) {
+  .hero-container {
+    padding: 30px 5%;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  .hero-text h1 {
+    font-size: 2rem;
+  }
+
+  .hero-text p {
+    font-size: 1rem;
+  }
+
   .chatbot {
     right: 0 !important;
     bottom: 0 !important;
@@ -286,6 +303,7 @@ body.show-chatbot .chatbot {
     width: 100vw !important;
     height: 100vh !important;
     border-radius: 0 !important;
+    z-index: 2000;
   }
 
   header {
@@ -307,8 +325,8 @@ body.show-chatbot .chatbot {
     box-sizing: border-box !important;
   }
 
-  .chat-toggler {
-    display: none !important; 
+  body.show-chatbot .chat-toggler {
+    display: flex !important; 
   }
   
   body.show-chatbot .chatbot {
