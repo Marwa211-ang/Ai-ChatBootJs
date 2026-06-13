@@ -3,37 +3,7 @@ body {
   background: #e3f2fd;
   font-family: sans-serif;
 }
-/*  Responsiveness  */
-@media (max-width: 490px) {
-  .chatbot {
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 0;
-  }
 
-
-  .chatbot .chatbox {
-    height: calc(100% - 130px);
-    padding: 15px 15px 80px;
-  }
-
-  .chatbot .chat-input {
-    padding: 5px 15px;
-  }
-
- 
-  .chat-toggler {
-    display: none; 
-  }
-  
-  body.show-chatbot .chatbot {
-    opacity: 1;
-    pointer-events: auto;
-    transform: scale(1);
-  }
-}
 .hero-container {
   direction: ltr;
   display: flex;
@@ -41,27 +11,28 @@ body {
   align-items: center;
   padding: 50px 10%;
   background: linear-gradient(45deg, #6366f1, #a855f7 100%);
-    min-height: 100vh;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .hero-text {
-    flex: 1;
-    max-width: 500px;
-    color: #ffffff;
+  flex: 1;
+  max-width: 500px;
+  color: #ffffff;
 }
 
 .hero-text h1 {
-    font-size: 2.5rem;
-    margin-bottom: 20px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .hero-text p {
-    font-size: 1.1rem;
-    line-height: 1.6;
-    color: #f3e8ff; 
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #f3e8ff; 
 }
+
 header {
   display: flex;
   justify-content: space-between;
@@ -69,11 +40,19 @@ header {
   padding: 16px 20px;
   background: linear-gradient(45deg, #6366f1, #a855f7);
   color: #fff;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 header h2 {
   font-size: 1.4rem;
   margin: 0;
+}
+
+header .header-icons {
+  display: flex;
+  gap: 15px;
+  align-items: center;
 }
 
 header .close-btn {
@@ -85,7 +64,6 @@ header .close-btn {
 header .close-btn:hover {
   transform: translateY(3px);
 }
-
 
 .chat-toggler {
   position: fixed;
@@ -104,14 +82,19 @@ header .close-btn:hover {
   border-radius: 50%;
   transition: all 0.2s ease;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 999;
 }
-
 
 body.show-chatbot .chat-toggler {
   transform: rotate(90deg);
 }
 
-/* صندوق الشات نفسه */
+#clear-btn:hover {
+  color: #f2f2f2 !important;
+  transform: scale(1.1);
+  transition: all 0.2s ease;
+}
+
 .chatbot {
   position: fixed;
   right: 35px;
@@ -124,13 +107,12 @@ body.show-chatbot .chat-toggler {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  /* سحر الإخفاء والظهور بالأنيميشن */
   transform: scale(0.5);
   opacity: 0;
   pointer-events: none;
   transition: all 0.2s ease;
+  z-index: 1000;
 }
-
 
 body.show-chatbot .chatbot {
   transform: scale(1);
@@ -146,7 +128,7 @@ body.show-chatbot .chatbot {
   margin: 0;
   direction: ltr;
   scroll-behavior: smooth;
-  padding-bottom: 90px !important;
+  padding-bottom: 80px !important; 
 }
 
 .chatbox .chat {
@@ -159,7 +141,6 @@ body.show-chatbot .chatbot {
   list-style: none;
   margin-bottom: 20px;
 }
-
 
 .chatbox .chat span {
   width: 32px;
@@ -181,8 +162,8 @@ body.show-chatbot .chatbot {
   max-width: 75%;
   color: #333;
   margin: 0;
+  word-break: break-word;
 }
-
 
 .chatbox .outgoing {
   justify-content: flex-end;
@@ -199,6 +180,11 @@ body.show-chatbot .chatbot {
 .chatbox .incoming span {
   align-self: flex-start;
   margin-top: 5px;
+}
+
+.chatbox .incoming p {
+  direction: auto;   
+  text-align: initial;      
 }
 
 .chat-input {
@@ -222,7 +208,7 @@ body.show-chatbot .chatbot {
   outline: none;
   resize: none;
   font-size: 0.95rem;
-  padding: 10px 5px;
+  padding: 10px 10px 10px 5px;
   direction: rtl;
   box-sizing: border-box;
   overflow-y: hidden;
@@ -241,6 +227,17 @@ body.show-chatbot .chatbot {
   margin-left: 10px;
 }
 
+.chat-input #camera-btn {
+  font-size: 1.45rem;
+  color: #706fd3;
+  cursor: pointer;
+  margin-right: 8px; 
+  transition: color 0.2s ease;
+}
+
+.chat-input #camera-btn:hover {
+  color: #474787;
+}
 
 .typing-animation {
   display: flex;
@@ -264,66 +261,59 @@ body.show-chatbot .chatbot {
 .typing-animation span:nth-child(3) { animation-delay: 0.4s; }
 
 @keyframes blink {
-  0%, 100% {
-    transform: translateY(0);
-    opacity: 0.4;
-  }
-  50% {
-    transform: translateY(-6px);
-    opacity: 1;
-  }
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(-6px); opacity: 1; }
 }
 
-
-.chat-input #camera-btn {
-  font-size: 1.45rem;
-  color: #706fd3;
-  cursor: pointer;
-  margin-right: 8px; 
-  transition: color 0.2s ease;
-}
-
-.chat-input #camera-btn:hover {
-  color: #474787;
-}
-
-.chat-input textarea {
-  padding: 10px 10px 10px 5px;
-}
-
-.chatbox .incoming p {
-    direction: auto;   
-    text-align: initial;     
-    
-  }
 .chatbot.fullscreen {
-    width: 100vw !important;  /* يأخذ عرض الشاشة بالكامل */
-    height: 100vh !important; /* يأخذ طول الشاشة بالكامل */
-    right: 0 !important;      /* يتلغي الهامش اليمين */
-    bottom: 0 !important;     /* يتلغي الهامش التحتاني */
-    border-radius: 0 !important; /* نشيل الحواف الدائرية عشان يقفل مع الشاشة */
+  width: 100vw !important;  
+  height: 100vh !important; 
+  right: 0 !important;      
+  bottom: 0 !important;     
+  border-radius: 0 !important; 
 }
 
-/* لتكبير منطقة الكتابة شوية لما نكون في وضع ملء الشاشة عشان التناسق */
 .chatbot.fullscreen .chat-input {
-    height: 70px;
-    padding: 10px 30px;
+  height: 70px;
+  padding: 10px 30px;
 }
 
-.chatbot.fullscreen {
-  width: 100vw !important;  /* يأخذ عرض الشاشة بالكامل */
-    height: 100vh !important; /* يأخذ طول الشاشة بالكامل */
-    right: 0 !important;      /* يتلغي الهامش اليمين */
-    bottom: 0 !important;     /* يتلغي الهامش التحتاني */
-    border-radius: 0 !important; /* نشيل الحواف الدائرية عشان يقفل مع الشاشة */
-}
+@media (max-width: 490px) {
+  .chatbot {
+    right: 0 !important;
+    bottom: 0 !important;
+    top: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+  }
 
-  .chatbot.fullscreen .chat-input {
-    height: 70px;
-    padding: 10px 30px;
-}
-#clear-btn:hover {
-    color: #f2f2f2 !important; /* بيتحول للون الأحمر الهادي عند الوقوف عليه */
-    transform: scale(1.1);     /* بيكبر حاجة بسيطة جداً */
-    transition: all 0.2s ease;
+  header {
+    padding: 12px 15px;
+  }
+  
+  header h2 {
+    font-size: 1.2rem;
+  }
+
+  .chatbot .chatbox {
+    height: calc(100% - 120px) !important;
+    padding: 15px 15px 80px !important;
+  }
+
+  .chatbot .chat-input {
+    padding: 5px 15px !important;
+    height: 60px !important;
+    box-sizing: border-box !important;
+  }
+
+  .chat-toggler {
+    display: none !important; 
+  }
+  
+  body.show-chatbot .chatbot {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: scale(1) !important;
+  }
 }
