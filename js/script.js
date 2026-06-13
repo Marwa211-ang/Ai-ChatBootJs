@@ -12,7 +12,7 @@ const chatbotContainer = document.querySelector(".chatbot");
 const clearBtn = document.getElementById("clear-btn");
 
 let pickedMedia = null; 
-let extractedText = null; // متغير جديد لحفظ النص الصريح فوراً وتخفيف الضغط
+let extractedText = null; 
 
 let chatHistory = JSON.parse(localStorage.getItem("chat-history")) || [];
 
@@ -51,7 +51,6 @@ function generateResponse(incomingLi, userMessage, mediaFile = null) {
       incomingLi.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p>عذراً، حصلت مشكلة في الاتصال بالـ API.</p>`;
     })
     .finally(() => {
-      // إعادة تفعيل الزرار فوراً بعد انتهاء الطلب
       if (sendChatBtn) {
         sendChatBtn.style.pointerEvents = "auto";
         sendChatBtn.style.opacity = "1";
@@ -60,7 +59,7 @@ function generateResponse(incomingLi, userMessage, mediaFile = null) {
     });
 }
 
-// 2. دالة التحكم في الشات (خفيفة جداً وسريعة)
+// 2. دالة التحكم في الشات
 const handleChat = () => {
   if (!chatInput || sendChatBtn.style.pointerEvents === "none") return;
   
@@ -69,23 +68,27 @@ const handleChat = () => {
   
   if (!userMessage && !pickedMedia && !extractedText) return;
   
-  // قفل الزرار فورا لمنع الـ Double Click
   if (sendChatBtn) {
     sendChatBtn.style.pointerEvents = "none";
     sendChatBtn.style.opacity = "0.5";
   }
 
-  // لو النص جاهز مسبقاً، بندمجه فوراً بدون عمليات معالجة تقيلة
+  // دمج نصوص الـ PDF أو الـ Txt بالتعليمات المزدوجة بنجاح وحمايتها من المسح
   if (extractedText) {
     const systemInstruction = `
 [System Instruction / نظام تحليل الملفات الذكي]:
-You are an expert document and code analyzer. You support both Arabic and English.
-Respond in the same language the user uses. If the user asks "what is the most important part", extract it.
+You are an expert document and code analyzer. You support both Arabic and English perfectly.
+Analyse the attached file structure, key concepts, or main functions. 
+Respond in the same language the user uses for their question. If the user asks "what is the most important part", extract it and explain why based on the actual visible text content.
+
+أنت خبير في تحليل المستندات والأكواد وتدعم العربية والإنجليزية تماماً.
+قم بتحليل بنية الملف المرفق، واستخرج الأفكار أو الدوال الأساسية.
+رد دائماً بنفس اللغة التي سأل بها المستخدم. إذا سألك عن أهم جزء، استخرجه واشرح السبب بناءً على المحتوى النصي الفعلي المقروء.
 
 [Attached File Content / محتوى الملف المرفق]:
 ${extractedText}
 --------------------------------------------------`;
-    userMessage = typedMessage ? `${systemInstruction}\n[User Question]: ${typedMessage}` : `${systemInstruction}\n[User Question]: قم بتحليل هذا الملف واستخرج أهم جزء فيه.`;
+    userMessage = typedMessage ? `${systemInstruction}\n[User Question]: ${typedMessage}` : `${systemInstruction}\n[User Question]: قم بتحليل هذا الملف بالكامل واستخرج الخلاصة وأهم جزء فيه.`;
   }
 
   const chatLi = document.createElement("li");
@@ -97,7 +100,8 @@ ${extractedText}
         ${typedMessage ? `<p style="margin: 0; word-break: break-word;">${typedMessage}</p>` : ''}
       </div>`;
   } else if (extractedText) {
-    chatLi.innerHTML = `<p>${typedMessage || "تحليل الملف النصي"} <br><small>📄 تم إرفاق ملف نصي</small></p>`;
+    // تم تصحيح البج هنا: شلنا إعادة حشو الـ userMessage عشان ميمسحش الـ Prompt الذكي فوق
+    chatLi.innerHTML = `<p>${typedMessage || "تحليل الملف المرفق"} <br><small>📄 تم إرفاق مستند نصي/PDF</small></p>`;
   } else {
     chatLi.innerHTML = `<p>${userMessage}</p>`;
   }
@@ -115,50 +119,44 @@ ${extractedText}
   chatbox.appendChild(incomingLi);
   chatbox.scrollTo(0, chatbox.scrollHeight);
 
-  generateResponse(incomingLi, userMessage, pickedMedia);
+  // نرسل الـ pickedMedia فقط للصور، أما الـ PDF والنصوص فتم دمجها في الـ userMessage خلاص
+  const mediaToSend = (pickedMedia && pickedMedia.mimeType.startsWith("image/")) ? pickedMedia : null;
+  generateResponse(incomingLi, userMessage, mediaToSend);
 
-  // تنظيف المتغيرات
   pickedMedia = null;
   extractedText = null;
   if (uploadBtn) uploadBtn.style.color = "#706fd3"; 
   if (fileInput) fileInput.value = "";
 };
 
-// 3. مراقب اختيار الملفات (بيدير العمليات التقيلة أثناء الاختيار وليس أثناء الضغط)
 // 3. مراقب اختيار الملفات المطور (يدعم الصور، التيكست، والـ PDF الفعلي)
 if (fileInput) {
   fileInput.addEventListener("change", () => {
     const file = fileInput.files[0]; 
     if (!file) return; 
 
-    // تغيير لون الزرار للإشارة إلى جاري المعالجة (رمادي مثلاً)
     if (uploadBtn) uploadBtn.style.color = "#a4b0be";
 
     const reader = new FileReader(); 
     
-    // أ. لو الملف صورة
     if (file.type.startsWith("image/")) {
       reader.onload = (e) => {
         pickedMedia = { mimeType: file.type, base64Data: e.target.result.split(",")[1] };
         extractedText = null;
-        if (uploadBtn) uploadBtn.style.color = "#2ecc71"; // أخضر للصورة
+        if (uploadBtn) uploadBtn.style.color = "#2ecc71"; 
         console.log("جاهز لتحليل الصورة!");
       };
       reader.readAsDataURL(file); 
     } 
-    
-    // ب. لو الملف PDF حقيقي
     else if (file.type === "application/pdf") {
       reader.onload = async (e) => {
         try {
           const typedarray = new Uint8Array(e.target.result);
-          // إعداد مكتبة PDF.js
           pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
           
           const pdf = await pdfjsLib.getDocument(typedarray).promise;
           let fullText = "";
           
-          // حلقة وقراءة الصفحات صفحة صفحة وتجميع النصوص
           for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const textContent = await page.getTextContent();
@@ -166,11 +164,10 @@ if (fileInput) {
             fullText += pageText + "\n";
           }
           
-          // حفظ النص المستخرج وقصه لتأمين الكوتة
           extractedText = fullText.substring(0, 10000); 
           pickedMedia = null;
           
-          if (uploadBtn) uploadBtn.style.color = "#e67e22"; // برتقالي للـ PDF
+          if (uploadBtn) uploadBtn.style.color = "#e67e22"; // برتقالي يعني تم سحب نصوص الـ PDF
           console.log("تم استخراج النصوص من الـ PDF بنجاح!");
         } catch (error) {
           console.error("خطأ في قراءة الـ PDF:", error);
@@ -178,15 +175,13 @@ if (fileInput) {
           if (uploadBtn) uploadBtn.style.color = "#706fd3";
         }
       };
-      reader.readAsArrayBuffer(file); // قراءة الـ PDF كـ ArrayBuffer للمكتبة
+      reader.readAsArrayBuffer(file); 
     } 
-    
-    // ج. لو الملف نصي عادي (.txt, .js, .css...)
     else {
       reader.onload = (e) => {
         extractedText = e.target.result.substring(0, 8000); 
         pickedMedia = null;
-        if (uploadBtn) uploadBtn.style.color = "#3498db"; // أزرق للتيكست
+        if (uploadBtn) uploadBtn.style.color = "#3498db"; 
         console.log("الملف النصي جاهز تماماً!");
       };
       reader.readAsText(file); 
@@ -194,7 +189,7 @@ if (fileInput) {
   });
 }
 
-// باقي الـ Event Listeners كما هي بدون تغيير
+// الـ Event Listeners الأساسية للـ UI
 if (sendChatBtn) sendChatBtn.addEventListener("click", handleChat);
 if (chatToggler) chatToggler.addEventListener("click", () => document.body.classList.toggle("show-chatbot"));
 if (closeBtn) closeBtn.addEventListener("click", () => document.body.classList.remove("show-chatbot"));
