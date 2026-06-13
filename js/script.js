@@ -129,59 +129,74 @@ ${extractedText}
   if (fileInput) fileInput.value = "";
 };
 
-// 3. مراقب اختيار الملفات المطور (يدعم الصور، التيكست، والـ PDF الفعلي)
+// 3. مراقب اختيار الملفات الذكي (يستخرج النصوص من الـ PDF الحقيقي محلياً 100% وبدون سيرفر)
 if (fileInput) {
   fileInput.addEventListener("change", () => {
     const file = fileInput.files[0]; 
     if (!file) return; 
-6
-    if (uploadBtn) uploadBtn.style.color = "#a4b0be";
+
+    if (uploadBtn) uploadBtn.style.color = "#a4b0be"; // جاري المعالجة
 
     const reader = new FileReader(); 
     
+    // أ. لو الملف صورة
     if (file.type.startsWith("image/")) {
       reader.onload = (e) => {
         pickedMedia = { mimeType: file.type, base64Data: e.target.result.split(",")[1] };
         extractedText = null;
-        if (uploadBtn) uploadBtn.style.color = "#2ecc71"; 
+        if (uploadBtn) uploadBtn.style.color = "#2ecc71"; // أخضر للصورة
         console.log("جاهز لتحليل الصورة!");
       };
       reader.readAsDataURL(file); 
     } 
+    
+    // ب. لو الملف PDF حقيقي (استخراج بشري نقي)
     else if (file.type === "application/pdf") {
       reader.onload = async (e) => {
         try {
           const typedarray = new Uint8Array(e.target.result);
-          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
           
-          const pdf = await pdfjsLib.getDocument(typedarray).promise;
+          // تشغيل المكتبة محلياً بالكامل بدون ملف Worker خارجي
+          const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
           let fullText = "";
           
+          // اللف على جميع الصفحات لاستخراج النصوص الحقيقية
           for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const textContent = await page.getTextContent();
+            
+            // تجميع الكلمات المكتوبة داخل الصفحة
             const pageText = textContent.items.map(item => item.str).join(" ");
             fullText += pageText + "\n";
           }
           
-          extractedText = fullText.substring(0, 10000); 
-          pickedMedia = null;
+          // تنظيف النص وتأمينه من أي رموز غريبة
+          if (fullText.trim().length > 0) {
+            extractedText = fullText.substring(0, 9000); // حفظ النص الفعلي
+            pickedMedia = null;
+            if (uploadBtn) uploadBtn.style.color = "#e67e22"; // برتقالي يعني الـ PDF اشتغل تمام!
+            console.log("عاش! تم استخراج النصوص الفعلية من الـ PDF بنجاح.");
+          } else {
+            // لو الملف عبارة عن صور سكانر مش نصوص
+            alert("هذا الملف عبارة عن صور، يرجى رفع صفحاته كصور ليتمكن البوت من قراءتها.");
+            if (uploadBtn) uploadBtn.style.color = "#706fd3";
+          }
           
-          if (uploadBtn) uploadBtn.style.color = "#e67e22"; // برتقالي يعني تم سحب نصوص الـ PDF
-          console.log("تم استخراج النصوص من الـ PDF بنجاح!");
         } catch (error) {
-          console.error("خطأ في قراءة الـ PDF:", error);
-          alert("فشل في استخراج النصوص من ملف الـ PDF");
+          console.error("خطأ أثناء قراءة الـ PDF:", error);
+          alert("حدث خطأ أثناء معالجة ملف الـ PDF محلياً.");
           if (uploadBtn) uploadBtn.style.color = "#706fd3";
         }
       };
       reader.readAsArrayBuffer(file); 
     } 
+    
+    // ج. لو الملف نصي عادي (.txt, .js, .css...)
     else {
       reader.onload = (e) => {
         extractedText = e.target.result.substring(0, 8000); 
         pickedMedia = null;
-        if (uploadBtn) uploadBtn.style.color = "#3498db"; 
+        if (uploadBtn) uploadBtn.style.color = "#3498db"; // أزرق للتيكست
         console.log("الملف النصي جاهز تماماً!");
       };
       reader.readAsText(file); 
