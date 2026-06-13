@@ -1,7 +1,38 @@
-/* تنسيق جسم الصفحة الافتراضي */
+
 body {
   background: #e3f2fd;
   font-family: sans-serif;
+}
+/*  Responsiveness  */
+@media (max-width: 490px) {
+  .chatbot {
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+
+
+  .chatbot .chatbox {
+    height: calc(100% - 130px);
+    padding: 15px 15px 80px;
+  }
+
+  .chatbot .chat-input {
+    padding: 5px 15px;
+  }
+
+ 
+  .chat-toggler {
+    display: none; 
+  }
+  
+  body.show-chatbot .chatbot {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+  }
 }
 .hero-container {
   direction: ltr;
@@ -29,7 +60,7 @@ body {
 .hero-text p {
     font-size: 1.1rem;
     line-height: 1.6;
-    color: #f3e8ff; /* بنفسجي فاتح جداً هادي للكتابة الفرعية */
+    color: #f3e8ff; 
 }
 header {
   display: flex;
@@ -55,7 +86,7 @@ header .close-btn:hover {
   transform: translateY(3px);
 }
 
-/* زرار التوجلر المدور اللي تحت على اليمين */
+
 .chat-toggler {
   position: fixed;
   right: 35px;
@@ -75,7 +106,7 @@ header .close-btn:hover {
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-/* لما الشات يفتح، بنلف الأيقونة حركة خفيفة */
+
 body.show-chatbot .chat-toggler {
   transform: rotate(90deg);
 }
@@ -100,7 +131,7 @@ body.show-chatbot .chat-toggler {
   transition: all 0.2s ease;
 }
 
-/* أول ما الـ JS يضيف الكلاس للـ body الشات يظهر فورا */
+
 body.show-chatbot .chatbot {
   transform: scale(1);
   opacity: 1;
@@ -108,7 +139,7 @@ body.show-chatbot .chatbot {
 }
 
 .chatbox {
-  flex: 1; /* تصحيح الكلمة من flex-block لـ flex عشان تفرد */
+  flex: 1; 
   overflow-y: auto;
   list-style: none;
   padding: 15px 20px;
@@ -129,7 +160,7 @@ body.show-chatbot .chatbot {
   margin-bottom: 20px;
 }
 
-/* تصحيح هنا: شيلنا النقطة من قبل span */
+
 .chatbox .chat span {
   width: 32px;
   height: 32px;
@@ -152,7 +183,7 @@ body.show-chatbot .chatbot {
   margin: 0;
 }
 
-/* رسائل مروة (اليمين والبنفسجي) */
+
 .chatbox .outgoing {
   justify-content: flex-end;
   padding-left: 50px;
@@ -170,7 +201,6 @@ body.show-chatbot .chatbot {
   margin-top: 5px;
 }
 
-/* منطقة الـ Input السفلي */
 .chat-input {
   position: absolute;
   bottom: 0;
@@ -211,7 +241,7 @@ body.show-chatbot .chatbot {
   margin-left: 10px;
 }
 
-/* صندوق الأنيميشن (النقط اللي بتتحرك) */
+
 .typing-animation {
   display: flex;
   gap: 5px;
@@ -249,7 +279,7 @@ body.show-chatbot .chatbot {
   font-size: 1.45rem;
   color: #706fd3;
   cursor: pointer;
-  margin-right: 8px; /* مسافة صغنونة بينها وبين المشبك */
+  margin-right: 8px; 
   transition: color 0.2s ease;
 }
 
@@ -257,7 +287,6 @@ body.show-chatbot .chatbot {
   color: #474787;
 }
 
-/* هنعدل البادنج بتاع التكست اريا شوية عشان يساع الأيقونتين */
 .chat-input textarea {
   padding: 10px 10px 10px 5px;
 }
@@ -267,7 +296,6 @@ body.show-chatbot .chatbot {
     text-align: initial;     
     
   }
-/* ⚡ كلاس تحويل الشات لملء الشاشة بالكامل */
 .chatbot.fullscreen {
     width: 100vw !important;  /* يأخذ عرض الشاشة بالكامل */
     height: 100vh !important; /* يأخذ طول الشاشة بالكامل */
@@ -290,7 +318,6 @@ body.show-chatbot .chatbot {
     border-radius: 0 !important; /* نشيل الحواف الدائرية عشان يقفل مع الشاشة */
 }
 
-/* لتكبير منطقة الكتابة شوية لما نكون في وضع ملء الشاشة عشان التناسق */
   .chatbot.fullscreen .chat-input {
     height: 70px;
     padding: 10px 30px;
