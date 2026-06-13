@@ -125,27 +125,69 @@ ${extractedText}
 };
 
 // 3. مراقب اختيار الملفات (بيدير العمليات التقيلة أثناء الاختيار وليس أثناء الضغط)
+// 3. مراقب اختيار الملفات المطور (يدعم الصور، التيكست، والـ PDF الفعلي)
 if (fileInput) {
   fileInput.addEventListener("change", () => {
     const file = fileInput.files[0]; 
     if (!file) return; 
 
+    // تغيير لون الزرار للإشارة إلى جاري المعالجة (رمادي مثلاً)
+    if (uploadBtn) uploadBtn.style.color = "#a4b0be";
+
     const reader = new FileReader(); 
     
+    // أ. لو الملف صورة
     if (file.type.startsWith("image/")) {
       reader.onload = (e) => {
         pickedMedia = { mimeType: file.type, base64Data: e.target.result.split(",")[1] };
         extractedText = null;
-        if (uploadBtn) uploadBtn.style.color = "#2ecc71"; 
+        if (uploadBtn) uploadBtn.style.color = "#2ecc71"; // أخضر للصورة
+        console.log("جاهز لتحليل الصورة!");
       };
       reader.readAsDataURL(file); 
-    } else {
-      // بنقرأ الفايل كنص صريح ونقصه هنا ببطء براحتنا قبل ما المستخدم يدوس إرسال
+    } 
+    
+    // ب. لو الملف PDF حقيقي
+    else if (file.type === "application/pdf") {
+      reader.onload = async (e) => {
+        try {
+          const typedarray = new Uint8Array(e.target.result);
+          // إعداد مكتبة PDF.js
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+          
+          const pdf = await pdfjsLib.getDocument(typedarray).promise;
+          let fullText = "";
+          
+          // حلقة وقراءة الصفحات صفحة صفحة وتجميع النصوص
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map(item => item.str).join(" ");
+            fullText += pageText + "\n";
+          }
+          
+          // حفظ النص المستخرج وقصه لتأمين الكوتة
+          extractedText = fullText.substring(0, 10000); 
+          pickedMedia = null;
+          
+          if (uploadBtn) uploadBtn.style.color = "#e67e22"; // برتقالي للـ PDF
+          console.log("تم استخراج النصوص من الـ PDF بنجاح!");
+        } catch (error) {
+          console.error("خطأ في قراءة الـ PDF:", error);
+          alert("فشل في استخراج النصوص من ملف الـ PDF");
+          if (uploadBtn) uploadBtn.style.color = "#706fd3";
+        }
+      };
+      reader.readAsArrayBuffer(file); // قراءة الـ PDF كـ ArrayBuffer للمكتبة
+    } 
+    
+    // ج. لو الملف نصي عادي (.txt, .js, .css...)
+    else {
       reader.onload = (e) => {
         extractedText = e.target.result.substring(0, 8000); 
         pickedMedia = null;
-        if (uploadBtn) uploadBtn.style.color = "#3498db"; 
-        console.log("الملف النصي جاهز تماماً في الخلفية!");
+        if (uploadBtn) uploadBtn.style.color = "#3498db"; // أزرق للتيكست
+        console.log("الملف النصي جاهز تماماً!");
       };
       reader.readAsText(file); 
     }
