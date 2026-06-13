@@ -134,7 +134,7 @@ if (fileInput) {
   fileInput.addEventListener("change", () => {
     const file = fileInput.files[0]; 
     if (!file) return; 
-
+6
     if (uploadBtn) uploadBtn.style.color = "#a4b0be";
 
     const reader = new FileReader(); 
